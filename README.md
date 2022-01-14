@@ -4,6 +4,7 @@
 ## Objectifs 
 Le but de notre projet est de créer un réseau de CNN de type LeNet-5.
 Ce réseau est constitué de deux alternances de CNN et d'average pooling, suivies de deux couches dense.
+
 ![image](https://user-images.githubusercontent.com/78031851/149531185-d8487c36-5b6d-4a4c-ae32-901396d8ab28.png)
 
 Au cours de notre projet nous nous proposons de :
@@ -13,6 +14,7 @@ Au cours de notre projet nous nous proposons de :
 * Faire une étude comparative des performances entre nos fonction GPU /CPU
 * Créer à partir d'un langage bas niveau des couches de neurones de type convolutive ou fully connected
 * Exploiter les poids d'un modèle entrainé grace à Keras de facons à paramètrer nos couches convolutives codées en C.
+
 
 ## Partie 1 : Prise en main de Cuda : Multiplication de matrices
 
@@ -72,17 +74,133 @@ Le fait que l'on utilise le specifier __global__ traduit le fait que la fonction
 * Executée par le GPU. 
 * Appelée par le CPU.
 
+On obtient ce résultat :
+
+/////////////////
+////////////////
+
+On note que la matrice issue de l'addition est la meme que celle calculée sur le CPU, cependant sont temps de calcul est fortement réduit. 
+
 ### Multiplication de deux matrices NxN sur CPU :
 
+Nous voulons maintenant effectuer la multiplication de deux matrices. Le calcul de chaque coefficient de la matrice de sortie est le suivant :
+
+![image](https://user-images.githubusercontent.com/78031851/149547974-44eed4b4-1f49-4eef-b1ae-c85fad73a7e6.png)
+
+On effectue ce calcul sur le CPU avec cette fonction 
 
 ![image](https://user-images.githubusercontent.com/78031851/149545248-f998cf28-df15-4350-a2bb-64acabd8def2.png)
 
-### Multiplication de deux matrices NxN sur GPU
+On obtient ainsi la matice suivante :
+
+ ////////////
+ ///////////
 
 
+### Multiplication de deux matrices NxN sur GPU :
 
-## TP2 Conv, Mean pooling et Acivation 
+On se propose maintenant de réaliser la même fonction mais en CUDA et executable par le GPU.
 
-Nous avons aussi codé une fonction permettant de créer une matrice de taille NxP remplie de coéfficients tous égaux à une valeure fixé val. Cela nous permettera par la suite de faire des vérification rapide que nos autres fonctions marchent bien, notament quand il s'agira de notre fonction de convolution.
+Chaque ligne est représenté par un Block et chaque colonne est représenté par un ID de thread au sein de ces blocks.
 
-## TP3  Réseau complet Dense Layer
+![image](https://user-images.githubusercontent.com/78031851/149549335-86ce292c-3f5f-4187-a156-12add19facb3.png)
+
+On obtient ainsi la matice suivante :
+
+ ////////////
+ ///////////
+ 
+ On observe que les matrices issues du CPU et du GPU sont identiques. 
+
+##  Partie 2 - Premières couches du réseau de neurone LeNet-5 : Convolution 2D et subsampling
+
+### Layer 1 - Génération des données de test
+
+Nous avons aussi codé une fonction permettant de créer une matrice de taille NxP remplie de coéfficients tous égaux à une valeur fixé val. Cela nous permettera par la suite de faire des vérification rapide que nos autres fonctions marchent bien, notament quand il s'agira de notre fonction de convolution.
+
+De plus on crée une fonction permettant de faire une matrice de kernel carré de dimension dim identitaire dont la valeur centrale est fixée par la variable val.
+
+![image](https://user-images.githubusercontent.com/78031851/149550547-31532be1-b81f-4c26-844f-ea05b03708a5.png)
+
+Ces kernels sont très pratiques pour vérifier que nos convolutions marchent bien en un coup d'oeil.
+
+On obtient donc les 6 noyaux de taille 5x5 suivants :
+
+/////////
+/////////
+
+### Layer 2 - Convolution 2D :
+
+Nous voulons mettre en place une convolution en 2 dimension de notre image 32x32x1 d'entrée issue de MNIST. Nous voulons réaliser cette convolution sur GPU de facons à diminuer au minimum notre temps de calcul.
+
+![image](https://user-images.githubusercontent.com/78031851/149553590-3e7358a1-ac2b-4692-8427-98cbb4a21385.png)
+
+Dans notre cas on souhaite faire la convolution de cette image par 6 kernels de taille 5x5, nous obtiendrons donc une sortie de taille 28x28x6.
+Layer 2- Convolution avec 6 noyaux de convolution de taille 5x5. La taille résultantes est donc de 6x28x28.
+
+Voici la fonction de convolution que nous avons utilisé pour la suite :
+
+``` C++
+__global__ void cudaConv2D(float* M, float* kernel, float* Mout, int M_line, int M_col, int kernel_size, int nb_kernel){
+    
+    int offset = (kernel_size-1)/2;
+    int out_line = M_line - offset;
+    int out_col = M_col - offset;
+    //Convolution d'une matrice par un kernel
+    int lig = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+
+    float conv = 0.0;
+
+    if (lig < out_line && col < out_col){
+        int temp = M_line * M_col;
+
+        for (int k_line = 0; k_line < kernel_size; k_line++) {
+            for (int k_col = 0; k_col < kernel_size; k_col++) {
+                for (int n_k = 0; n_k < nb_kernel; n_k++){
+                    conv += M[(lig + k_line) * M_col + col + k_col + n_k * temp] * kernel[k_line * kernel_size + k_col + n_k * nb_kernel];
+            
+                }
+            }
+        }
+        Mout[lig * out_col + col] = conv;
+    }
+}
+```
+### Layer 3 - Sous-échantillonnage
+
+Nous nous fixons maintenant l'objectif de faire un mean pooling 2x2 de la sortie de notre couche de convolution.
+
+![image](https://user-images.githubusercontent.com/78031851/149553896-231e3b11-25fb-445d-b52c-5c47484650be.png)
+
+Cette étape permet de faire un subsampling de la feature map tout en introduisant une invariance à la translation. Ce type d'opération est très souvent utilisée dans après une couche de convolution.
+
+### Tests
+
+Afin de vérifier notre fonction de convolution, nous avons choisi de faire la convolution d'une matrice de 32*32*1 remplie de 1 par des noyaux identité dont la valeur centrale est 10.
+
+Voici nos matrices ainsi que les résultats obtenus :
+
+/////////////////
+/////////////////
+
+Les résultats sont bien conformes à ce que nous attendions à avoir, à savoir une matrice 28*28*6 remplie de 10.
+
+
+### Fonctions d'activation
+
+Afin d'achever cette partie nous allons coder une fonction d'activation afin de l'appliquée en sortie de nos deux couches à chacun des coéficients de la matrice. Le choix s'est porté sur une fonction tanh :
+
+![image](https://user-images.githubusercontent.com/78031851/149557450-af774bb7-962d-47cd-b16e-5582e19684a8.png)
+
+Cette fonction renvoi une valeur entre -1 et 1 et celle-ci satureà 1 en à partir de 2 et à -1 à partir de -2;
+C'est pour cette raison que nous ;llons tester cette fonction à l'aide d'une matrice remplie de valeure entre -1 et 1 que nous allons convoluer avec un kenel unitaire suivi d'un average pooling.
+
+On obtient la matrice suivante de taille 14x14 :
+
+///////////////
+///////////////
+
+Celle-ci correspond bien à ce qu'on s'attend à avoir.
+
+## TP3  Un peu de Python
