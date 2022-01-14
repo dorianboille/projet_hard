@@ -212,8 +212,7 @@ Celle-ci correspond bien à ce qu'on s'attend à avoir.
 
 En ouvrant le LeNet5 on se rend compte que le résumé du modèle sous tensorFlow est le suivant :
 
-//////
-//////
+![image](https://user-images.githubusercontent.com/78031851/149587071-dc7fcff8-5259-4ed8-882d-72805688bff0.png)
 
 Il nous manque une couche de pooling, une couche de conv ainsi que 3 couches Dense. nous disposons déjà des fonctions pour faire les couches conv et de pooling.
 Il faut donc que nous réalisions la fonction pour faire les couches dense et l'activation softmax.
