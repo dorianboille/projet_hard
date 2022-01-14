@@ -11,16 +11,16 @@ Au cours de notre projet nous nous proposons de :
 
 * Exploiter un logiciel de gestion de versions décentralisé tel que git.
 * Appréhender la programmation en CUDA
-* Faire une étude comparative des performances entre nos fonction GPU /CPU
+* Faire une étude comparative des performances entre nos fonctions GPU /CPU
 * Créer à partir d'un langage bas niveau des couches de neurones de type convolutive ou fully connected
-* Exploiter les poids d'un modèle entrainé grace à Keras de facons à paramètrer nos couches convolutives codées en C.
+* Exploiter les poids d'un modèle entrainé grâce à Keras de facons à paramétrer nos couches convolutives codées en C.
 
 
 ## Partie 1 : Prise en main de Cuda : Multiplication de matrices
 
 ### Création d'une matrice sur CPU :
 
-Dans un premier temps nous allons dévelloper des fonctions simples exécutés par le GPU permettant de créer et observer des matrices.
+Dans un premier temps nous allons développer des fonctions simples exécutées par le GPU permettant de créer et observer des matrices.
 
 Chaque matrice est un tableau indexé par un pointeur et la fonction matrixinit() permet de créer un tableau de taille NxP remplis de coefficients aléatoires compris entre -1 et 1. 
 
@@ -29,15 +29,15 @@ Chaque matrice est un tableau indexé par un pointeur et la fonction matrixinit(
 
 ### Affichage d'une matrice sur CPU
 
-Par la suite nous avons aussi créer une fonction MatrixPrint permettant d'afficher dans la console une matrice de taille n lignes p colonnes.
+Par la suite nous avons aussi créé une fonction MatrixPrint permettant d'afficher dans la console une matrice de taille n lignes p colonnes.
 
 ![image](https://user-images.githubusercontent.com/78031851/149536836-3b7c6b93-2fe6-45d9-a251-dc5d2001afb6.png)
 
-Cette fonction est primordiale pour juger de la qualité de notre travail car elle permet de visualiser les résultats de nos diverses opération ainsi que de juger de la justesse des résultats obtenus.
+Cette fonction est primordiale pour juger de la qualité de notre travail car elle permet de visualiser les résultats de nos diverses opérations ainsi que de juger de la justesse des résultats obtenus.
 
 ### Addition de deux matrices sur CPU : 
 
-Pour additionner deux matrices sur CPU, il suffit simplement d'ajouter les un après les autres les coefficients de même indice des deux matrice d'entrée puis de venir stocker ces résultats dans la matrice Mout. Il n'y a ici aucune parallélisation des calculs, les additions et les affectations sont faites par le CPU les une après les autres. On commence à comprendre que ces calculs pourraient etre beaucoups plus rapides si le calcul d'un coéfficient et une affectation étaient faites par un thread différents. On gagnerai ainsi un temps proportionnel au nombre de coéfficient. 
+Pour additionner deux matrices sur CPU, il suffit simplement d'ajouter les uns après les autres les coefficients de même indice des deux matrices d'entrée puis de venir stocker ces résultats dans la matrice Mout. Il n'y a ici aucune parallélisation des calculs, les additions et les affectations sont faites par le CPU les unes après les autres. On commence à comprendre que ces calculs pourraient être beaucoup plus rapides si le calcul d'un coefficient et une affectation étaient faits par un thread différent. On gagnerai ainsi un temps proportionnel au nombre de coéfficient. 
 
 On obtient cependant un résultat tout à fait correct :
 
@@ -46,15 +46,15 @@ On obtient cependant un résultat tout à fait correct :
 
 ### Addition de deux matrices sur GPU :
 
-On se propose maintenant de réaliser une fonction cudaMatrixAdd() permettant d'éxploiter les capacités de parrallélisation de nos GPU. Pour cela ilm est important de réflechir aux dimensions que nous allons donner à notre Grid ainsi qu'a nos blocs.
+On se propose maintenant de réaliser une fonction cudaMatrixAdd() permettant d'exploiter les capacités de parallélisation de nos GPU. Pour cela il est important de réflechir aux dimensions que nous allons donner à notre Grid ainsi qu'a nos blocs.
 Nous avons choisi de raisonner de la facons suivante :
 
- * Chaque block corréspond à une une ligne des matrices
+ * Chaque block correspond à une une ligne des matrices
  * Chaque thread au sein de ces blocks correspondent à une colonnes des matrices. 
 
 ![image](https://user-images.githubusercontent.com/78031851/149542884-bd182552-d9a0-470c-9d6a-3e63b76825a3.png)
 
-En définissant la dimension de la faccons suivante :
+En définissant la dimension de la facons suivante :
 
 ![image](https://user-images.githubusercontent.com/78031851/149544760-df7a1254-e894-4c22-9d4b-d06a7cbb98db.png)
 
@@ -62,16 +62,16 @@ On en déduit la fonction suivante :
 
 ![image](https://user-images.githubusercontent.com/78031851/149544188-ac6c1f92-755e-4f16-bf3a-06289a0db73b.png)
 
-On observe que cette fonction permet à chaque thread de chaque block de calculer un coefficient différent de l'aditin de atrice et de le stocker au bon endroit dans la matrice de sortie Mout.
+On observe que cette fonction permet à chaque thread de chaque block de calculer un coefficient différent de l'adition de matrice et de le stocker au bon endroit dans la matrice de sortie Mout.
 
-En cuda les matrices sont indicées grâce au variables :
+En cuda les matrices sont indicées grâce aux variables :
 * gridDim.x/y représentant la dimension totale selon x/y de la grille que nous avons défini.
 * blockDim.x/y représentant la dimension totale selon x/y de chaque block que nous avons défini au sein de la grid.
 * blockIdx.x/y représentant l'Id du block (selon x ou y) auquel appartient le thread qui est concerné.
 * ThreadIdx.xy représentant l'Id  (selon x ou y) du thread qui est concerné
 
 Le fait que l'on utilise le specifier __global__ traduit le fait que la fonction est:
-* Executée par le GPU. 
+* Exécutée par le GPU. 
 * Appelée par le CPU.
 
 On obtient ce résultat :
@@ -102,13 +102,13 @@ Les valeurs sont bonnes il y a juste des arrondis.
 
 ### Multiplication de deux matrices NxN sur GPU :
 
-On se propose maintenant de réaliser la même fonction mais en CUDA et executable par le GPU.
+On se propose maintenant de réaliser la même fonction mais en CUDA et exécutable par le GPU.
 
-Chaque ligne est représenté par un Block et chaque colonne est représenté par un ID de thread au sein de ces blocks.
+Chaque ligne est représentée par un Block et chaque colonne est représenté par un ID de thread au sein de ces blocks.
 
 ![image](https://user-images.githubusercontent.com/78031851/149549335-86ce292c-3f5f-4187-a156-12add19facb3.png)
 
-On obtient ainsi la matice suivante :
+On obtient ainsi la matrice suivante :
 
 ![image](https://user-images.githubusercontent.com/78031851/149579810-3b2641e7-e1e7-4ae5-81fd-8b8b2901a214.png)
  
@@ -121,7 +121,7 @@ On obtient ainsi la matice suivante :
 
 ### Layer 1 - Génération des données de test
 
-Nous avons aussi codé une fonction permettant de créer une matrice de taille NxP remplie de coéfficients tous égaux à une valeur fixé val. Cela nous permettera par la suite de faire des vérification rapide que nos autres fonctions marchent bien, notament quand il s'agira de notre fonction de convolution.
+Nous avons aussi codé une fonction permettant de créer une matrice de taille NxP remplie de coefficients tous égaux à une valeur fixée val. Cela nous permettra par la suite de faire des vérification rapides que nos autres fonctions marchent bien, notamment quand il s'agira de notre fonction de convolution.
 
 De plus on crée une fonction permettant de faire une matrice de kernel carré de dimension dim identitaire dont la valeur centrale est fixée par la variable val.
 
@@ -136,14 +136,14 @@ On obtient donc les 6 noyaux de taille 5x5 suivants :
 
 ### Layer 2 - Convolution 2D :
 
-Nous voulons mettre en place une convolution en 2 dimension de notre image 32x32x1 d'entrée issue de MNIST. Nous voulons réaliser cette convolution sur GPU de facons à diminuer au minimum notre temps de calcul.
+Nous voulons mettre en place une convolution en 2 dimensions de notre image 32x32x1 d'entrée issue de MNIST. Nous voulons réaliser cette convolution sur GPU de facons à diminuer au minimum notre temps de calcul.
 
 ![image](https://user-images.githubusercontent.com/78031851/149553590-3e7358a1-ac2b-4692-8427-98cbb4a21385.png)
 
 Dans notre cas on souhaite faire la convolution de cette image par 6 kernels de taille 5x5, nous obtiendrons donc une sortie de taille 28x28x6.
-Layer 2- Convolution avec 6 noyaux de convolution de taille 5x5. La taille résultantes est donc de 6x28x28.
+Layer 2- Convolution avec 6 noyaux de convolution de taille 5x5. La taille résultante est donc de 6x28x28.
 
-Voici la fonction de convolution que nous avons utilisé pour la suite :
+Voici la fonction de convolution que nous avons utilisée pour la suite :
 
 ``` C++
 __global__ void cudaConv2D(float* M, float* kernel, float* Mout, int M_line, int M_col, int kernel_size, int nb_kernel){
@@ -178,7 +178,7 @@ Nous nous fixons maintenant l'objectif de faire un mean pooling 2x2 de la sortie
 
 ![image](https://user-images.githubusercontent.com/78031851/149553896-231e3b11-25fb-445d-b52c-5c47484650be.png)
 
-Cette étape permet de faire un subsampling de la feature map tout en introduisant une invariance à la translation. Ce type d'opération est très souvent utilisée dans après une couche de convolution.
+Cette étape permet de faire un subsampling de la feature map tout en introduisant une invariance à la translation. Ce type d'opération est très souvent utilisé dans après une couche de convolution.
 
 ### Tests
 
@@ -194,12 +194,12 @@ Les résultats sont bien conformes à ce que nous attendions à avoir, à savoir
 
 ### Fonctions d'activation
 
-Afin d'achever cette partie nous allons coder une fonction d'activation afin de l'appliquée en sortie de nos deux couches à chacun des coéficients de la matrice. Le choix s'est porté sur une fonction tanh :
+Afin d'achever cette partie nous allons coder une fonction d'activation afin de l'appliquer en sortie de nos deux couches à chacun des coefficients de la matrice. Le choix s'est porté sur une fonction tanh :
 
 ![image](https://user-images.githubusercontent.com/78031851/149557450-af774bb7-962d-47cd-b16e-5582e19684a8.png)
 
-Cette fonction renvoie une valeur entre -1 et 1 et celle-ci satureà 1 en à partir de 2 et à -1 à partir de -2;
-C'est pour cette raison que nous ;llons tester cette fonction à l'aide d'une matrice remplie de valeure entre -1 et 1 que nous allons convoluer avec un kenel unitaire suivi d'un average pooling.
+Cette fonction renvoie une valeur entre -1 et 1 et celle-ci sature à 1 en à partir de 2 et à -1 à partir de -2;
+C'est pour cette raison que nous allons tester cette fonction à l'aide d'une matrice remplie de valeur entre -1 et 1 que nous allons convoluer avec un kenel unitaire suivi d'un average pooling.
 
 On obtient la matrice suivante de taille 14x14 :
 
