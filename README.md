@@ -41,8 +41,8 @@ Pour additionner deux matrices sur CPU, il suffit simplement d'ajouter les un ap
 
 On obtient cependant un résultat tout à fait correct :
 
-/////////////////
-////////////////
+![image](https://user-images.githubusercontent.com/78031851/149578358-44bd2ca3-c089-4022-82d5-4a105a9d3e68.png)
+
 
 ### Addition de deux matrices sur GPU :
 
@@ -76,10 +76,12 @@ Le fait que l'on utilise le specifier __global__ traduit le fait que la fonction
 
 On obtient ce résultat :
 
-/////////////////
-////////////////
+![image](https://user-images.githubusercontent.com/78031851/149578565-6ffa28d3-27b6-472b-a33e-fab60c6c0546.png)
 
-On note que la matrice issue de l'addition est la meme que celle calculée sur le CPU, cependant sont temps de calcul est fortement réduit. 
+On note que la matrice issue de l'addition est la meme que celle calculée sur le CPU, cependant sont temps de calcul est fortement réduit.
+
+![Comparaison](https://user-images.githubusercontent.com/78031851/149579608-fce0da4d-ecdc-4d28-931a-35b0b3e0150b.png)
+
 
 ### Multiplication de deux matrices NxN sur CPU :
 
@@ -93,8 +95,9 @@ On effectue ce calcul sur le CPU avec cette fonction
 
 On obtient ainsi la matice suivante :
 
- ////////////
- ///////////
+![image](https://user-images.githubusercontent.com/78031851/149579478-3aa10ddb-1673-4fa6-88d9-7ce7ffabab34.png
+
+Les valeurs sont bonnes il y a juste des arrondis.
 
 
 ### Multiplication de deux matrices NxN sur GPU :
@@ -107,10 +110,12 @@ Chaque ligne est représenté par un Block et chaque colonne est représenté pa
 
 On obtient ainsi la matice suivante :
 
- ////////////
- ///////////
+![image](https://user-images.githubusercontent.com/78031851/149579810-3b2641e7-e1e7-4ae5-81fd-8b8b2901a214.png)
  
  On observe que les matrices issues du CPU et du GPU sont identiques. 
+ 
+ ![image](https://user-images.githubusercontent.com/78031851/149580036-af804a1e-df9b-4b9c-8402-07204662bad7.png)
+
 
 ##  Partie 2 - Premières couches du réseau de neurone LeNet-5 : Convolution 2D et subsampling
 
@@ -126,8 +131,8 @@ Ces kernels sont très pratiques pour vérifier que nos convolutions marchent bi
 
 On obtient donc les 6 noyaux de taille 5x5 suivants :
 
-/////////
-/////////
+![image](https://user-images.githubusercontent.com/78031851/149580516-45d5250b-3023-4468-932e-c891fba61c8f.png)
+
 
 ### Layer 2 - Convolution 2D :
 
@@ -179,10 +184,10 @@ Cette étape permet de faire un subsampling de la feature map tout en introduisa
 
 Afin de vérifier notre fonction de convolution, nous avons choisi de faire la convolution d'une matrice de 32*32*1 remplie de 1 par des noyaux identité dont la valeur centrale est 10.
 
-Voici nos matrices ainsi que les résultats obtenus :
+Voici la matrice de sortie de la convolution :
 
-/////////////////
-/////////////////
+![image](https://user-images.githubusercontent.com/78031851/149580797-ea9c81ad-85e6-490f-bcdf-8633e86afe11.png)
+
 
 Les résultats sont bien conformes à ce que nous attendions à avoir, à savoir une matrice 28*28*6 remplie de 10.
 
@@ -193,13 +198,13 @@ Afin d'achever cette partie nous allons coder une fonction d'activation afin de 
 
 ![image](https://user-images.githubusercontent.com/78031851/149557450-af774bb7-962d-47cd-b16e-5582e19684a8.png)
 
-Cette fonction renvoi une valeur entre -1 et 1 et celle-ci satureà 1 en à partir de 2 et à -1 à partir de -2;
+Cette fonction renvoie une valeur entre -1 et 1 et celle-ci satureà 1 en à partir de 2 et à -1 à partir de -2;
 C'est pour cette raison que nous ;llons tester cette fonction à l'aide d'une matrice remplie de valeure entre -1 et 1 que nous allons convoluer avec un kenel unitaire suivi d'un average pooling.
 
 On obtient la matrice suivante de taille 14x14 :
 
-///////////////
-///////////////
+![image](https://user-images.githubusercontent.com/78031851/149581235-cdd1ec9f-4286-40e1-bf75-521b79dd9209.png)
+
 
 Celle-ci correspond bien à ce qu'on s'attend à avoir.
 
