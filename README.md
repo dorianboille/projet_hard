@@ -209,3 +209,32 @@ On obtient la matrice suivante de taille 14x14 :
 Celle-ci correspond bien à ce qu'on s'attend à avoir.
 
 ## TP3  Un peu de Python
+
+En ouvrant le LeNet5 on se rend compte que le résumé du modèle sous tensorFlow est le suivant :
+
+//////
+//////
+
+Il nous manque une couche de pooling, une couche de conv ainsi que 3 couches Dense. nous disposons déjà des fonctions pour faire les couches conv et de pooling.
+Il faut donc que nous réalisions la fonction pour faire les couches dense et l'activation softmax.
+Nous avons donc écrit les fonctions suivantes :
+
+* fonction dense :
+```C
+__global__ void cudaFullyConnected(float *x_in, float *w, float *Mout, int lig_prec, int col_prec,int prof_prec){
+
+    int lig  = threadIdx.x;
+    float temp = 0;
+    
+    for (int i=0; i<lig_prec*col_prec*prof_prec;i++){
+        temp+=x_in[i]*w[i*lig_prec*col_prec*prof_prec +lig];
+    }
+    
+    Mout[lig] = temp;
+
+}
+```
+
+N'arrivant pas à extraire les poids du modèle python de facons convenable, nous n'avons pas finalisé le modèle. Cependant nous avons quand mème réalisé la structure de celui-ci dans notre dernier fichier. 
+
+
